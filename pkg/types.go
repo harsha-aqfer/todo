@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/harsha-aqfer/todo/internal/util"
 	"strings"
 	"time"
 )
@@ -23,22 +24,25 @@ type TodoResponse struct {
 }
 
 func (tr *TodoRequest) Validate() error {
-	// task should be non-empty
 	if tr.Task == "" {
 		return fmt.Errorf("inadequate input parameters. Required field: task")
 	}
 
-	cat := tr.Category
+	category := tr.Category
 	tr.Category = strings.ToLower(tr.Category)
 
-	if tr.Category != "work" && tr.Category != "home" {
-		return fmt.Errorf("unknown category value: %s", cat)
+	categories := []string{"work", "home"}
+
+	if !util.Contains(categories, tr.Category) {
+		return fmt.Errorf("unknown category value: %s", category)
 	}
 
 	pr := tr.Priority
 	tr.Priority = strings.ToLower(tr.Priority)
 
-	if tr.Priority != "low" && tr.Priority != "medium" && tr.Priority != "high" {
+	priorities := []string{"low", "medium", "high"}
+
+	if !util.Contains(priorities, tr.Priority) {
 		return fmt.Errorf("unknown priority value: %s", pr)
 	}
 	return nil
