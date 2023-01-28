@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"github.com/harsha-aqfer/todo/internal/db"
 	"github.com/harsha-aqfer/todo/pkg"
 	asserts "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -11,31 +12,31 @@ import (
 	"testing"
 )
 
-type mockDb struct {
+type mockTodoDB struct {
 	mock.Mock
 }
 
-func (t *mockDb) ListTodos(all bool) ([]pkg.TodoResponse, error) {
+func (t *mockTodoDB) ListTodos(all bool) ([]pkg.TodoResponse, error) {
 	args := t.Called(all)
 	return args.Get(0).([]pkg.TodoResponse), args.Error(1)
 }
 
-func (t *mockDb) CreateTodo(tr *pkg.TodoRequest) error {
+func (t *mockTodoDB) CreateTodo(tr *pkg.TodoRequest) error {
 	args := t.Called(tr)
 	return args.Error(0)
 }
 
-func (t *mockDb) GetTodo(id int64) (*pkg.TodoResponse, error) {
+func (t *mockTodoDB) GetTodo(id int64) (*pkg.TodoResponse, error) {
 	args := t.Called(id)
 	return args.Get(0).(*pkg.TodoResponse), args.Error(1)
 }
 
-func (t *mockDb) UpdateTodo(id int64, tr *pkg.TodoRequest) error {
+func (t *mockTodoDB) UpdateTodo(id int64, tr *pkg.TodoRequest) error {
 	args := t.Called(id, tr)
 	return args.Error(0)
 }
 
-func (t *mockDb) DeleteTodo(id int64) error {
+func (t *mockTodoDB) DeleteTodo(id int64) error {
 	args := t.Called(id)
 	return args.Error(0)
 }
@@ -44,8 +45,8 @@ func Test_ListTodos(t *testing.T) {
 	assert := asserts.New(t)
 
 	var (
-		md = &mockDb{}
-		s  = &Service{store: md}
+		md = &mockTodoDB{}
+		s  = &Service{db: &db.DB{Todo: md}}
 
 		rr = httptest.NewRecorder()
 		rq = httptest.NewRequest(http.MethodGet, "http://localhost:3000/todos?all=true", nil)

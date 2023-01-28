@@ -22,7 +22,7 @@ func NewConfig() *Config {
 
 type Service struct {
 	listenAddr string
-	store      db.Store
+	db         *db.DB
 }
 
 func NewService(listenAddr string, c *Config) (*Service, error) {
@@ -33,7 +33,7 @@ func NewService(listenAddr string, c *Config) (*Service, error) {
 
 	return &Service{
 		listenAddr: listenAddr,
-		store:      store,
+		db:         store,
 	}, nil
 }
 

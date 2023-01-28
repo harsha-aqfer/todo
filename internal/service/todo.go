@@ -22,7 +22,7 @@ func getID(r *http.Request) (int64, error) {
 func (s *Service) listTodos(w http.ResponseWriter, r *http.Request) error {
 	all := r.URL.Query().Get("all") == "true"
 
-	todos, err := s.store.ListTodos(all)
+	todos, err := s.db.Todo.ListTodos(all)
 
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (s *Service) createTodo(w http.ResponseWriter, r *http.Request) error {
 		return WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	if err := s.store.CreateTodo(&tr); err != nil {
+	if err := s.db.Todo.CreateTodo(&tr); err != nil {
 		return err
 	}
 	return WriteJSON(w, http.StatusOK, nil)
@@ -53,7 +53,7 @@ func (s *Service) getTodo(w http.ResponseWriter, r *http.Request) error {
 		return WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	todo, err := s.store.GetTodo(todoId)
+	todo, err := s.db.Todo.GetTodo(todoId)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (s *Service) updateTodo(w http.ResponseWriter, r *http.Request) error {
 		)
 	}
 
-	if err = s.store.UpdateTodo(todoId, &tr); err != nil {
+	if err = s.db.Todo.UpdateTodo(todoId, &tr); err != nil {
 		return err
 	}
 	return WriteJSON(w, http.StatusOK, nil)
@@ -90,7 +90,7 @@ func (s *Service) deleteTodo(w http.ResponseWriter, r *http.Request) error {
 		return WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	if err = s.store.DeleteTodo(todoId); err != nil {
+	if err = s.db.Todo.DeleteTodo(todoId); err != nil {
 		return err
 	}
 	return WriteJSON(w, http.StatusOK, nil)
