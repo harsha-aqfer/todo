@@ -41,6 +41,7 @@ func (s *Service) Run() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/todos", makeHTTPHandleFunc(s.HandleTodos))
+	router.HandleFunc("/todos/{id}", makeHTTPHandleFunc(s.HandleTodosById))
 
 	log.Println("JSON API server running on port: ", s.listenAddr)
 

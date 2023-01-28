@@ -57,3 +57,65 @@ func Test_Db_CreateTodo(t *testing.T) {
 		assert.Nil(err)
 	}
 }
+
+func Test_Db_GetTodo(t *testing.T) {
+	assert := asserts.New(t)
+	db, mock, err := sqlMock.New()
+
+	now := time.Now()
+	end := now.Add(20 * time.Minute)
+
+	if assert.Nil(err) {
+		defer func() {
+			_ = db.Close()
+		}()
+		row := sqlMock.NewRows([]string{"id", "task", "category", "priority", "created_at", "completed_at"}).
+			AddRow(1, "task-1", "work", "low", now, end)
+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT id, task, category, priority, created_at, completed_at FROM todo WHERE id = ?")).WillReturnRows(row)
+
+		s := &DB{db}
+		output, err := s.GetTodo(1)
+
+		if assert.Nil(err) {
+			assert.Equal(&pkg.TodoResponse{Id: 1, Task: "task-1", Category: "work", Priority: "low", CreatedAt: &now, CompletedAt: &end}, output)
+		}
+	}
+}
+
+func Test_Db_DeleteTodo(t *testing.T) {
+	assert := asserts.New(t)
+	db, mock, err := sqlMock.New()
+
+	if assert.Nil(err) {
+		defer func() {
+			_ = db.Close()
+		}()
+
+		mock.ExpectExec(regexp.QuoteMeta("DELETE FROM todo WHERE id = ?")).
+			WithArgs(1).
+			WillReturnResult(driver.ResultNoRows)
+
+		s := &DB{db}
+		err = s.DeleteTodo(1)
+		assert.Nil(err)
+	}
+}
+
+func Test_Db_UpdateTodo(t *testing.T) {
+	assert := asserts.New(t)
+	db, mock, err := sqlMock.New()
+
+	if assert.Nil(err) {
+		defer func() {
+			_ = db.Close()
+		}()
+
+		mock.ExpectExec(regexp.QuoteMeta("UPDATE todo SET task = ?, category = ?, priority = ? WHERE id = ?")).
+			WithArgs("task-1", "home", "low", 1).WillReturnResult(driver.ResultNoRows)
+
+		s := &DB{db}
+		err = s.UpdateTodo(1, &pkg.TodoRequest{Task: "task-1", Category: "home", Priority: "low"})
+		assert.Nil(err)
+	}
+}
