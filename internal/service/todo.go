@@ -72,7 +72,10 @@ func (s *Service) updateTodo(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if reflect.ValueOf(tr).IsZero() {
-		return WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "empty body not supported"})
+		return WriteJSON(w,
+			http.StatusBadRequest,
+			map[string]string{"error": "empty body is not supported"},
+		)
 	}
 
 	if err = s.store.UpdateTodo(todoId, &tr); err != nil {
