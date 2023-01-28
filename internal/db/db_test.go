@@ -1,0 +1,59 @@
+package db
+
+import (
+	"database/sql/driver"
+	sqlMock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/harsha-aqfer/todo/pkg"
+	asserts "github.com/stretchr/testify/assert"
+	"regexp"
+	"testing"
+	"time"
+)
+
+func Test_Db_ListTodos(t *testing.T) {
+	assert := asserts.New(t)
+	db, mock, err := sqlMock.New()
+
+	now := time.Now()
+	end := now.Add(20 * time.Minute)
+
+	if assert.Nil(err) {
+		defer func() {
+			_ = db.Close()
+		}()
+		rows := sqlMock.NewRows([]string{"id", "task", "category", "priority", "created_at", "completed_at"}).
+			AddRow(1, "task-1", "work", "low", now, end).
+			AddRow(2, "task-2", "home", "low", now, nil)
+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT id, task, category, priority, created_at, completed_at FROM todo WHERE NOT done")).WillReturnRows(rows)
+
+		s := &DB{db}
+		output, err := s.ListTodos(false)
+
+		if assert.Nil(err) {
+			assert.Len(output, 2)
+			assert.Equal(pkg.TodoResponse{Id: 1, Task: "task-1", Category: "work", Priority: "low", CreatedAt: &now, CompletedAt: &end}, output[0])
+			assert.Equal(pkg.TodoResponse{Id: 2, Task: "task-2", Category: "home", Priority: "low", CreatedAt: &now}, output[1])
+		}
+	}
+}
+
+func Test_Db_CreateTodo(t *testing.T) {
+	assert := asserts.New(t)
+	db, mock, err := sqlMock.New()
+
+	if assert.Nil(err) {
+		defer func() {
+			_ = db.Close()
+		}()
+
+		mock.ExpectExec(regexp.QuoteMeta("INSERT todo SET task = ?, category = ?, priority = ?")).
+			WithArgs("task-1", "home", "low").WillReturnResult(driver.ResultNoRows)
+
+		s := &DB{db}
+		err = s.CreateTodo(&pkg.TodoRequest{
+			Task: "task-1", Category: "home", Priority: "low",
+		})
+		assert.Nil(err)
+	}
+}
