@@ -43,6 +43,8 @@ func (s *Service) Run() {
 	router.HandleFunc("/todos", makeHTTPHandleFunc(s.HandleTodos))
 	router.HandleFunc("/todos/{id}", makeHTTPHandleFunc(s.HandleTodosById))
 
+	router.HandleFunc("/version", makeHTTPHandleFunc(s.getVersion))
+
 	log.Println("JSON API server running on port: ", s.listenAddr)
 
 	log.Fatal(http.ListenAndServe(s.listenAddr, router))
