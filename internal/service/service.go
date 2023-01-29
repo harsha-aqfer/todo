@@ -40,8 +40,8 @@ func NewService(listenAddr string, c *Config) (*Service, error) {
 func (s *Service) Run() {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/todos", makeHTTPHandleFunc(s.HandleTodos))
-	router.HandleFunc("/todos/{id}", makeHTTPHandleFunc(s.HandleTodosById))
+	router.HandleFunc("v1/todos", makeHTTPHandleFunc(s.HandleTodos))
+	router.HandleFunc("v1/todos/{id}", makeHTTPHandleFunc(s.HandleTodosById))
 
 	router.HandleFunc("/version", makeHTTPHandleFunc(s.getVersion))
 
@@ -55,7 +55,7 @@ type apiFunc func(http.ResponseWriter, *http.Request) error
 func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(w, r); err != nil {
-			WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 	}
 }
