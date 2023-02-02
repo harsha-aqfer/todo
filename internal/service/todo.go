@@ -10,6 +10,15 @@ import (
 	"strconv"
 )
 
+type apiError struct {
+	msg    string
+	status int
+}
+
+func (a apiError) Error() string {
+	return a.msg
+}
+
 func getID(r *http.Request) (int64, error) {
 	idStr := mux.Vars(r)["id"]
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -38,7 +47,7 @@ func (s *Service) createTodo(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if err := tr.Validate(); err != nil {
-		return WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return apiError{msg: err.Error(), status: http.StatusBadRequest}
 	}
 
 	if err := s.db.Todo.CreateTodo(&tr); err != nil {
@@ -50,7 +59,7 @@ func (s *Service) createTodo(w http.ResponseWriter, r *http.Request) error {
 func (s *Service) getTodo(w http.ResponseWriter, r *http.Request) error {
 	todoId, err := getID(r)
 	if err != nil {
-		return WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return apiError{msg: err.Error(), status: http.StatusBadRequest}
 	}
 
 	todo, err := s.db.Todo.GetTodo(todoId)
@@ -63,7 +72,7 @@ func (s *Service) getTodo(w http.ResponseWriter, r *http.Request) error {
 func (s *Service) updateTodo(w http.ResponseWriter, r *http.Request) error {
 	todoId, err := getID(r)
 	if err != nil {
-		return WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return apiError{msg: err.Error(), status: http.StatusBadRequest}
 	}
 
 	var tr pkg.TodoRequest
@@ -72,10 +81,7 @@ func (s *Service) updateTodo(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if reflect.ValueOf(tr).IsZero() {
-		return WriteJSON(w,
-			http.StatusBadRequest,
-			map[string]string{"error": "empty body is not supported"},
-		)
+		return apiError{msg: "empty body is not supported", status: http.StatusBadRequest}
 	}
 
 	if err = s.db.Todo.UpdateTodo(todoId, &tr); err != nil {
@@ -87,7 +93,7 @@ func (s *Service) updateTodo(w http.ResponseWriter, r *http.Request) error {
 func (s *Service) deleteTodo(w http.ResponseWriter, r *http.Request) error {
 	todoId, err := getID(r)
 	if err != nil {
-		return WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return apiError{msg: err.Error(), status: http.StatusBadRequest}
 	}
 
 	if err = s.db.Todo.DeleteTodo(todoId); err != nil {
