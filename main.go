@@ -23,7 +23,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app, err := service.NewService(":3000", conf)
+	app, err := service.NewService(conf)
 	if err != nil {
 		log.Fatal(err)
 	}
