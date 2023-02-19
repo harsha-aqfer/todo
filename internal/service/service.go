@@ -15,6 +15,7 @@ type Config struct {
 	Database   string `json:"database"`
 	Host       string `json:"host"`
 	ListenAddr string `json:"listen_addr"`
+	SecretKey  string `json:"secret_key"`
 }
 
 func NewConfig() *Config {
@@ -22,8 +23,8 @@ func NewConfig() *Config {
 }
 
 type Service struct {
-	listenAddr string
-	db         *db.DB
+	c  *Config
+	db *db.DB
 }
 
 func NewService(c *Config) (*Service, error) {
@@ -33,22 +34,24 @@ func NewService(c *Config) (*Service, error) {
 	}
 
 	return &Service{
-		listenAddr: c.ListenAddr,
-		db:         store,
+		c:  c,
+		db: store,
 	}, nil
 }
 
 func (s *Service) Run() {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/v1/todos", makeHTTPHandleFunc(s.HandleTodos))
-	router.HandleFunc("/v1/todos/{id}", makeHTTPHandleFunc(s.HandleTodosById))
+	router.HandleFunc("/v1/users/{user}/todos", withApiKeyAuth(makeHTTPHandleFunc(s.HandleTodos), s.c, s.db.User))
+	router.HandleFunc("/v1/users/{user}/todos/{id}", withApiKeyAuth(makeHTTPHandleFunc(s.HandleTodosById), s.c, s.db.User))
 
-	router.HandleFunc("/v1/version", makeHTTPHandleFunc(s.getVersion))
+	router.HandleFunc("/v1/register", makeHTTPHandleFunc(s.HandleUserRegister))
 
-	log.Println("JSON API server running on port: ", s.listenAddr)
+	router.HandleFunc("/v1/version", withApiKeyAuth(makeHTTPHandleFunc(s.getVersion), s.c, s.db.User))
 
-	log.Fatal(http.ListenAndServe(s.listenAddr, router))
+	log.Println("JSON API server running on port: ", s.c.ListenAddr)
+
+	log.Fatal(http.ListenAndServe(s.c.ListenAddr, router))
 }
 
 type apiFunc func(http.ResponseWriter, *http.Request) error

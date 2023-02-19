@@ -31,7 +31,7 @@ func getID(r *http.Request) (int64, error) {
 func (s *Service) listTodos(w http.ResponseWriter, r *http.Request) error {
 	all := r.URL.Query().Get("all") == "true"
 
-	todos, err := s.db.Todo.ListTodos(all)
+	todos, err := s.db.Todo.ListTodos(mux.Vars(r)["user"], all)
 
 	if err != nil {
 		return err
@@ -50,7 +50,12 @@ func (s *Service) createTodo(w http.ResponseWriter, r *http.Request) error {
 		return apiError{msg: err.Error(), status: http.StatusBadRequest}
 	}
 
-	if err := s.db.Todo.CreateTodo(&tr); err != nil {
+	userId, err := s.db.User.GetUserId(mux.Vars(r)["user"])
+	if err != nil {
+		return err
+	}
+
+	if err := s.db.Todo.CreateTodo(userId, &tr); err != nil {
 		return err
 	}
 	return WriteJSON(w, http.StatusOK, nil)
@@ -62,7 +67,7 @@ func (s *Service) getTodo(w http.ResponseWriter, r *http.Request) error {
 		return apiError{msg: err.Error(), status: http.StatusBadRequest}
 	}
 
-	todo, err := s.db.Todo.GetTodo(todoId)
+	todo, err := s.db.Todo.GetTodo(mux.Vars(r)["user"], todoId)
 	if err != nil {
 		return err
 	}
@@ -84,7 +89,12 @@ func (s *Service) updateTodo(w http.ResponseWriter, r *http.Request) error {
 		return apiError{msg: "empty body is not supported", status: http.StatusBadRequest}
 	}
 
-	if err = s.db.Todo.UpdateTodo(todoId, &tr); err != nil {
+	userId, err := s.db.User.GetUserId(mux.Vars(r)["user"])
+	if err != nil {
+		return err
+	}
+
+	if err = s.db.Todo.UpdateTodo(userId, todoId, &tr); err != nil {
 		return err
 	}
 	return WriteJSON(w, http.StatusOK, nil)
@@ -96,7 +106,7 @@ func (s *Service) deleteTodo(w http.ResponseWriter, r *http.Request) error {
 		return apiError{msg: err.Error(), status: http.StatusBadRequest}
 	}
 
-	if err = s.db.Todo.DeleteTodo(todoId); err != nil {
+	if err = s.db.Todo.DeleteTodo(mux.Vars(r)["user"], todoId); err != nil {
 		return err
 	}
 	return WriteJSON(w, http.StatusOK, nil)

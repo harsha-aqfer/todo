@@ -47,3 +47,17 @@ func (tr *TodoRequest) Validate() error {
 	}
 	return nil
 }
+
+// UserInfo has the basic information about a user.
+type UserInfo struct {
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	ApiKey string `json:"api_key,omitempty"`
+}
+
+func (ui *UserInfo) Validate() error {
+	if ui.Email == "" || ui.Name == "" {
+		return fmt.Errorf("inadequate input parameters. Required fields: name, email")
+	}
+	return nil
+}
