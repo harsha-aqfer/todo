@@ -23,6 +23,13 @@ type TodoResponse struct {
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
 }
 
+func (tr *TodoRequest) IsZero() bool {
+	return tr.Task == "" &&
+		tr.Priority == "" &&
+		tr.Category == "" &&
+		tr.Done == false
+}
+
 func (tr *TodoRequest) Validate() error {
 	if tr.Task == "" {
 		return fmt.Errorf("inadequate input parameters. Required field: task")
