@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/ghodss/yaml"
-	"github.com/harsha-aqfer/todo/internal/service"
+	"github.com/harsha-aqfer/todo/internal/service_echo"
 	"io/ioutil"
 	"log"
 	"os"
@@ -18,12 +18,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	conf := service.NewConfig()
+	conf := service_echo.NewConfig()
 	if err = yaml.Unmarshal(data, conf); err != nil {
 		log.Fatal(err)
 	}
 
-	app, err := service.NewService(conf)
+	app, err := service_echo.NewService(conf)
 	if err != nil {
 		log.Fatal(err)
 	}
