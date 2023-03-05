@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/harsha-aqfer/todo/internal/db"
 	"github.com/labstack/echo/v4"
-	"log"
 )
 
 type Config struct {
@@ -13,6 +12,7 @@ type Config struct {
 	Database   string `json:"database"`
 	Host       string `json:"host"`
 	ListenAddr string `json:"listen_addr"`
+	SigningKey string `json:"signing_key"`
 }
 
 func NewConfig() *Config {
@@ -21,6 +21,7 @@ func NewConfig() *Config {
 
 type Service struct {
 	listenAddr string
+	signingKey string
 	db         *db.DB
 }
 
@@ -32,6 +33,7 @@ func NewService(c *Config) (*Service, error) {
 
 	return &Service{
 		listenAddr: c.ListenAddr,
+		signingKey: c.SigningKey,
 		db:         store,
 	}, nil
 }
@@ -47,15 +49,20 @@ func (s *Service) Run() {
 		}
 	})
 
-	e.POST("/v1/todos", createTodo)
-	e.GET("/v1/todos", listTodos)
-
-	e.GET("/v1/todos/:id", getTodo)
-	e.PUT("/v1/todos/:id", updateTodo)
-	e.DELETE("/v1/todos/:id", deleteTodo)
-
 	e.GET("/v1/version", getVersion)
 
-	log.Println("Server running on port: ", s.listenAddr)
+	e.POST("/v1/sign_up", signUp)
+	e.POST("/v1/sign_in", signIn)
+
+	todoGrp := e.Group("")
+	todoGrp.Use(IsAuthorized)
+
+	todoGrp.POST("/v1/todos", createTodo)
+	todoGrp.GET("/v1/todos", listTodos)
+
+	todoGrp.GET("/v1/todos/:id", getTodo)
+	todoGrp.PUT("/v1/todos/:id", updateTodo)
+	todoGrp.DELETE("/v1/todos/:id", deleteTodo)
+
 	e.Logger.Fatal(e.Start(s.listenAddr))
 }

@@ -54,3 +54,34 @@ func (tr *TodoRequest) Validate() error {
 	}
 	return nil
 }
+
+type User struct {
+	Email     string     `json:"email"`
+	Username  string     `json:"username"`
+	Password  string     `json:"password"`
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+func (u User) Validate() error {
+	s := []string{u.Email, u.Password, u.Username}
+
+	if util.Contains(s, "") {
+		return fmt.Errorf("inadequate input parameters. Required email, username, password")
+	}
+	return nil
+}
+
+type MsgResp struct {
+	Message string `json:"message"`
+}
+
+func NewMsgResp(message string) *MsgResp {
+	return &MsgResp{Message: message}
+}
+
+type Token struct {
+	Type      string `json:"type"`
+	ExpiresIn int    `json:"expires_in"`
+	JWTToken  string `json:"jwt_token"`
+}

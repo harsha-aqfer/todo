@@ -9,11 +9,11 @@ import (
 )
 
 type TodoDB interface {
-	ListTodos(all bool) ([]pkg.TodoResponse, error)
-	GetTodo(id int64) (*pkg.TodoResponse, error)
-	CreateTodo(tr *pkg.TodoRequest) error
-	UpdateTodo(id int64, tr *pkg.TodoRequest) error
-	DeleteTodo(id int64) error
+	ListTodos(userID int64, all bool) ([]pkg.TodoResponse, error)
+	GetTodo(userID, todoID int64) (*pkg.TodoResponse, error)
+	CreateTodo(userID int64, tr *pkg.TodoRequest) error
+	UpdateTodo(userID, todoID int64, tr *pkg.TodoRequest) error
+	DeleteTodo(userID, todoID int64) error
 }
 
 type todoStore struct {
@@ -24,13 +24,13 @@ func NewTodoStore(db *sql.DB) TodoDB {
 	return &todoStore{db: db}
 }
 
-func (ts *todoStore) ListTodos(all bool) ([]pkg.TodoResponse, error) {
-	query := "SELECT id, task, category, priority, created_at, completed_at FROM todo"
+func (ts *todoStore) ListTodos(userID int64, all bool) ([]pkg.TodoResponse, error) {
+	query := "SELECT id, task, category, priority, created_at, completed_at FROM todo WHERE user_id = ?"
 
 	if !all {
-		query += " WHERE NOT done"
+		query += " AND NOT done"
 	}
-	rows, err := ts.db.Query(query)
+	rows, err := ts.db.Query(query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +58,10 @@ func (ts *todoStore) ListTodos(all bool) ([]pkg.TodoResponse, error) {
 	return todos, nil
 }
 
-func (ts *todoStore) CreateTodo(tr *pkg.TodoRequest) error {
-	query := "INSERT todo SET task = ?"
+func (ts *todoStore) CreateTodo(userID int64, tr *pkg.TodoRequest) error {
+	query := "INSERT todo SET user_id = ?, task = ?"
 
-	params := []interface{}{tr.Task}
+	params := []interface{}{userID, tr.Task}
 
 	if tr.Category != "" {
 		query += ", category = ?"
@@ -77,10 +77,10 @@ func (ts *todoStore) CreateTodo(tr *pkg.TodoRequest) error {
 	return err
 }
 
-func (ts *todoStore) GetTodo(id int64) (*pkg.TodoResponse, error) {
-	query := "SELECT id, task, category, priority, created_at, completed_at FROM todo WHERE id = ?"
+func (ts *todoStore) GetTodo(userID, todoID int64) (*pkg.TodoResponse, error) {
+	query := "SELECT id, task, category, priority, created_at, completed_at FROM todo WHERE user_id = ? AND id = ?"
 
-	rows, err := ts.db.Query(query, id)
+	rows, err := ts.db.Query(query, userID, todoID)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (ts *todoStore) GetTodo(id int64) (*pkg.TodoResponse, error) {
 	return nil, nil
 }
 
-func (ts *todoStore) UpdateTodo(id int64, tr *pkg.TodoRequest) error {
+func (ts *todoStore) UpdateTodo(userID, todoID int64, tr *pkg.TodoRequest) error {
 	var (
 		qs     []string
 		params []interface{}
@@ -135,12 +135,12 @@ func (ts *todoStore) UpdateTodo(id int64, tr *pkg.TodoRequest) error {
 		params = append(params, time.Now().UTC())
 	}
 
-	params = append(params, id)
-	_, err := ts.db.Exec(fmt.Sprintf("UPDATE todo SET %s WHERE id = ?", strings.Join(qs, ", ")), params...)
+	params = append(params, todoID, userID)
+	_, err := ts.db.Exec(fmt.Sprintf("UPDATE todo SET %s WHERE id = ? AND user_id = ?", strings.Join(qs, ", ")), params...)
 	return err
 }
 
-func (ts *todoStore) DeleteTodo(id int64) error {
-	_, err := ts.db.Exec("DELETE FROM todo WHERE id = ?", id)
+func (ts *todoStore) DeleteTodo(userID, todoID int64) error {
+	_, err := ts.db.Exec("DELETE FROM todo WHERE user_id = ? AND id = ?", userID, todoID)
 	return err
 }

@@ -6,8 +6,10 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.7.0
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/labstack/echo/v4 v4.10.0
+	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.8.1
 )
 
