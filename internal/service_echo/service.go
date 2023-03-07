@@ -20,9 +20,8 @@ func NewConfig() *Config {
 }
 
 type Service struct {
-	listenAddr string
-	signingKey string
-	db         *db.DB
+	conf *Config
+	db   *db.DB
 }
 
 func NewService(c *Config) (*Service, error) {
@@ -32,9 +31,8 @@ func NewService(c *Config) (*Service, error) {
 	}
 
 	return &Service{
-		listenAddr: c.ListenAddr,
-		signingKey: c.SigningKey,
-		db:         store,
+		conf: c,
+		db:   store,
 	}, nil
 }
 
@@ -49,8 +47,6 @@ func (s *Service) Run() {
 		}
 	})
 
-	e.GET("/v1/version", getVersion)
-
 	e.POST("/v1/sign_up", signUp)
 	e.POST("/v1/sign_in", signIn)
 
@@ -64,5 +60,5 @@ func (s *Service) Run() {
 	todoGrp.PUT("/v1/todos/:id", updateTodo)
 	todoGrp.DELETE("/v1/todos/:id", deleteTodo)
 
-	e.Logger.Fatal(e.Start(s.listenAddr))
+	e.Logger.Fatal(e.Start(s.conf.ListenAddr))
 }
