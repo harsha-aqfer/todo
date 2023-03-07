@@ -18,7 +18,10 @@ func getID(c echo.Context) (int64, error) {
 }
 
 func createTodo(c echo.Context) error {
-	s := c.Get("service").(*Service)
+	var (
+		s  = c.Get("service").(*Service)
+		sc = c.Get("security_context").(*SecurityContext)
+	)
 
 	var req pkg.TodoRequest
 	if err := c.Bind(&req); err != nil {
@@ -29,21 +32,24 @@ func createTodo(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if err := s.db.Todo.CreateTodo(&req); err != nil {
+	if err := s.db.Todo.CreateTodo(sc.UserID, &req); err != nil {
 		return err
 	}
 	return c.JSON(http.StatusOK, nil)
 }
 
 func getTodo(c echo.Context) error {
-	s := c.Get("service").(*Service)
+	var (
+		s  = c.Get("service").(*Service)
+		sc = c.Get("security_context").(*SecurityContext)
+	)
 
 	todoID, err := getID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	todo, err := s.db.Todo.GetTodo(todoID)
+	todo, err := s.db.Todo.GetTodo(sc.UserID, todoID)
 	if err != nil {
 		return err
 	}
@@ -53,9 +59,11 @@ func getTodo(c echo.Context) error {
 func listTodos(c echo.Context) error {
 	var (
 		s   = c.Get("service").(*Service)
+		sc  = c.Get("security_context").(*SecurityContext)
 		all = c.QueryParam("all") == "true"
 	)
-	todos, err := s.db.Todo.ListTodos(all)
+
+	todos, err := s.db.Todo.ListTodos(sc.UserID, all)
 	if err != nil {
 		return err
 	}
@@ -63,9 +71,12 @@ func listTodos(c echo.Context) error {
 }
 
 func updateTodo(c echo.Context) error {
-	s := c.Get("service").(*Service)
+	var (
+		s  = c.Get("service").(*Service)
+		sc = c.Get("security_context").(*SecurityContext)
+	)
 
-	todoId, err := getID(c)
+	todoID, err := getID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -79,21 +90,24 @@ func updateTodo(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "empty body is not supported")
 	}
 
-	if err = s.db.Todo.UpdateTodo(todoId, &req); err != nil {
+	if err = s.db.Todo.UpdateTodo(sc.UserID, todoID, &req); err != nil {
 		return err
 	}
 	return c.JSON(http.StatusOK, nil)
 }
 
 func deleteTodo(c echo.Context) error {
-	s := c.Get("service").(*Service)
+	var (
+		s  = c.Get("service").(*Service)
+		sc = c.Get("security_context").(*SecurityContext)
+	)
 
-	todoId, err := getID(c)
+	todoID, err := getID(c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if err = s.db.Todo.DeleteTodo(todoId); err != nil {
+	if err = s.db.Todo.DeleteTodo(sc.UserID, todoID); err != nil {
 		return err
 	}
 	return c.JSON(http.StatusOK, nil)
