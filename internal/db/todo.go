@@ -59,9 +59,10 @@ func (ts *todoStore) ListTodos(userID int64, all bool) ([]pkg.TodoResponse, erro
 }
 
 func (ts *todoStore) CreateTodo(userID int64, tr *pkg.TodoRequest) error {
-	query := "INSERT todo SET user_id = ?, task = ?"
-
-	params := []interface{}{userID, tr.Task}
+	var (
+		query  = "INSERT todo SET user_id = ?, task = ?"
+		params = []interface{}{userID, tr.Task}
+	)
 
 	if tr.Category != "" {
 		query += ", category = ?"
