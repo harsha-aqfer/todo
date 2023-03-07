@@ -60,7 +60,7 @@ func signIn(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, pkg.NewMsgResp("incorrect password"))
 	}
 
-	token, err := generateToken(user.Email, s.signingKey)
+	token, err := generateToken(user.Email, s.conf.SigningKey)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func IsAuthorized(next echo.HandlerFunc) echo.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("error parsing the token")
 			}
-			return []byte(s.signingKey), nil
+			return []byte(s.conf.SigningKey), nil
 		})
 
 		if err != nil {

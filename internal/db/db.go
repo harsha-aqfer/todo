@@ -7,10 +7,9 @@ import (
 )
 
 type DB struct {
-	Sql     *sql.DB
-	Version VersionDB
-	Todo    TodoDB
-	User    UserDB
+	Sql  *sql.DB
+	Todo TodoDB
+	User UserDB
 }
 
 func NewDB(username, password, host, dbname string) (*DB, error) {
@@ -18,10 +17,9 @@ func NewDB(username, password, host, dbname string) (*DB, error) {
 	db, err := sql.Open("mysql", connectString)
 	if err == nil {
 		return &DB{
-			Sql:     db,
-			Version: NewVersionStore(db),
-			Todo:    NewTodoStore(db),
-			User:    NewUserStore(db),
+			Sql:  db,
+			Todo: NewTodoStore(db),
+			User: NewUserStore(db),
 		}, nil
 	}
 	return nil, err
